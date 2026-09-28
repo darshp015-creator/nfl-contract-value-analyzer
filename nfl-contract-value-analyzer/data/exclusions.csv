@@ -1,0 +1,219 @@
+season,player_id,player_name,position,reason
+2022,00-0026189,DeSean Jackson,WR,No positive season cash evidence
+2022,00-0029000,Cole Beasley,WR,Multiple teams or missing weekly team evidence
+2022,00-0029664,Josh Gordon,WR,Latest contract team mismatch
+2022,00-0030513,Latavius Murray,RB,Multiple teams or missing weekly team evidence
+2022,00-0030874,Damien Williams,RB,No positive season cash evidence
+2022,00-0031051,John Brown,WR,Latest contract team mismatch
+2022,00-0031260,Logan Thomas,TE,Latest contract team mismatch
+2022,00-0031325,Sammy Watkins,WR,Multiple teams or missing weekly team evidence
+2022,00-0031598,Nick Boyle,TE,No positive season cash evidence
+2022,00-0031800,Taylor Heinicke,QB,Latest contract team mismatch
+2022,00-0032063,Mike Davis,RB,No positive season cash evidence
+2022,00-0032128,Chris Conley,WR,Multiple teams or missing weekly team evidence
+2022,00-0032144,Melvin Gordon,RB,No positive season cash evidence
+2022,00-0032355,Chester Rogers,WR,Latest contract team mismatch
+2022,00-0032394,Nick Vannett,TE,Multiple teams or missing weekly team evidence
+2022,00-0032688,Robbie Chosen,WR,Multiple teams or missing weekly team evidence
+2022,00-0032780,Jordan Howard,RB,Latest contract team mismatch
+2022,00-0032950,Carson Wentz,QB,Latest contract team mismatch
+2022,00-0033114,Mike Thomas,WR,Ambiguous same-year APY
+2022,00-0033280,Christian McCaffrey,RB,Multiple teams or missing weekly team evidence
+2022,00-0033282,Curtis Samuel,WR,Latest contract team mismatch
+2022,00-0033439,Pharaoh Brown,TE,Multiple teams or missing weekly team evidence
+2022,00-0033481,Marcus Kemp,WR,Latest contract team mismatch
+2022,00-0033951,Marlon Mack,RB,Multiple teams or missing weekly team evidence
+2022,00-0034052,Brandon Zylstra,WR,Latest contract team mismatch
+2022,00-0034109,Phillip Lindsay,RB,No positive season cash evidence
+2022,00-0034115,Jeff Wilson,RB,Multiple teams or missing weekly team evidence
+2022,00-0034367,Nyheim Hines,RB,Multiple teams or missing weekly team evidence
+2022,00-0034400,Jordan Wilkins,RB,No positive season cash evidence
+2022,00-0034613,Tanner Hudson,TE,No positive season cash evidence
+2022,00-0034676,James Washington,WR,No positive season cash evidence
+2022,00-0034681,Chase Edmonds,RB,Multiple teams or missing weekly team evidence
+2022,00-0034845,Sony Michel,RB,No positive season cash evidence
+2022,00-0034855,Baker Mayfield,QB,Multiple teams or missing weekly team evidence
+2022,00-0034867,Malik Turner,WR,No positive season cash evidence
+2022,00-0035184,Devine Ozigbo,RB,No positive season cash evidence
+2022,00-0035229,T.J. Hockenson,TE,Multiple teams or missing weekly team evidence
+2022,00-0035273,Qadree Ollison,RB,Latest contract team mismatch
+2022,00-0035406,Lil'Jordan Humphrey,WR,No positive season cash evidence
+2022,00-0035457,Tyron Johnson,WR,Multiple teams or missing weekly team evidence
+2022,00-0035527,Andy Isabella,WR,Multiple teams or missing weekly team evidence
+2022,00-0035603,Kendall Blanton,TE,No positive season cash evidence
+2022,00-0035664,Darrell Henderson,RB,No positive season cash evidence
+2022,00-0035831,James Robinson,RB,Multiple teams or missing weekly team evidence
+2022,00-0035860,Tony Jones,RB,Multiple teams or missing weekly team evidence
+2022,00-0035924,Jonathan Ward,RB,Multiple teams or missing weekly team evidence
+2022,00-0036145,Lawrence Cager,TE,Multiple teams or missing weekly team evidence
+2022,00-0036165,Isaiah Hodgins,WR,Multiple teams or missing weekly team evidence
+2022,00-0036226,Jacob Eason,QB,Latest contract team mismatch
+2022,00-0036228,Dezmon Patmon,WR,No positive season cash evidence
+2022,00-0036251,Zack Moss,RB,Multiple teams or missing weekly team evidence
+2022,00-0036326,Chase Claypool,WR,Multiple teams or missing weekly team evidence
+2022,00-0036328,Antonio Gibson,RB,Latest contract team mismatch
+2022,00-0036365,Bryan Edwards,WR,No positive season cash evidence
+2022,00-0036383,Eno Benjamin,RB,Multiple teams or missing weekly team evidence
+2022,00-0036439,Tyrie Cleveland,WR,No positive season cash evidence
+2022,00-0036626,Dyami Brown,WR,Latest contract team mismatch
+2022,00-0036628,John Bates,TE,Latest contract team mismatch
+2022,00-0036635,Ihmir Smith-Marsette,WR,No positive season cash evidence
+2022,00-0036669,Kylin Hill,RB,No positive season cash evidence
+2022,00-0036671,Dax Milne,WR,Latest contract team mismatch
+2022,00-0036860,Jake Funk,RB,Latest contract team mismatch
+2022,00-0036877,Jaelon Darden,WR,Multiple teams or missing weekly team evidence
+2022,00-0036913,Kadarius Toney,WR,Multiple teams or missing weekly team evidence
+2022,00-0036991,Amari Rodgers,WR,Multiple teams or missing weekly team evidence
+2022,00-0037185,Raleigh Webb,WR,Multiple teams or missing weekly team evidence
+2022,00-0037708,Maurice Alexander,WR,Ambiguous same-year APY
+2022,00-0037805,Jeremy Ruckert,TE,No eligible contract signed by season
+2022,00-0038149,Josh Ali,WR,No eligible contract signed by season
+2023,00-0029293,Marvin Jones,WR,No positive season cash evidence
+2023,00-0030061,Zach Ertz,TE,No positive season cash evidence
+2023,00-0030663,Willie Snead,WR,Ambiguous same-year APY
+2023,00-0030874,Damien Williams,RB,Latest contract team mismatch
+2023,00-0031260,Logan Thomas,TE,Latest contract team mismatch
+2023,00-0031868,Damiere Byrd,WR,Latest contract team mismatch
+2023,00-0032200,Ty Montgomery,WR,No positive season cash evidence
+2023,00-0032208,Phillip Dorsett,WR,Latest contract team mismatch
+2023,00-0032725,Stephen Anderson,TE,Latest contract team mismatch
+2023,00-0032951,Laquon Treadwell,WR,No positive season cash evidence
+2023,00-0033118,Kenyan Drake,RB,Multiple teams or missing weekly team evidence
+2023,00-0033258,Darrell Daniels,TE,No positive season cash evidence
+2023,00-0033282,Curtis Samuel,WR,Latest contract team mismatch
+2023,00-0033856,Leonard Fournette,RB,Latest contract team mismatch
+2023,00-0033893,Dalvin Cook,RB,No positive season cash evidence
+2023,00-0033949,Joshua Dobbs,QB,Multiple teams or missing weekly team evidence
+2023,00-0034177,Tim Boyle,QB,Ambiguous same-year APY
+2023,00-0034208,Mike Boone,RB,Ambiguous same-year APY
+2023,00-0034433,Nick Bawden,RB,Ambiguous same-year APY
+2023,00-0034928,Steven Sims,WR,Ambiguous same-year APY
+2023,00-0034955,Brett Rypien,QB,No positive season cash evidence
+2023,00-0035140,Mecole Hardman,WR,Multiple teams or missing weekly team evidence
+2023,00-0035184,Devine Ozigbo,RB,No positive season cash evidence
+2023,00-0035645,Gunner Olszewski,WR,Multiple teams or missing weekly team evidence
+2023,00-0035664,Darrell Henderson,RB,No positive season cash evidence
+2023,00-0035806,JaMycal Hasty,RB,No positive season cash evidence
+2023,00-0035831,James Robinson,RB,Latest contract team mismatch
+2023,00-0035860,Tony Jones,RB,Multiple teams or missing weekly team evidence
+2023,00-0035876,Andre Baccellia,WR,Ambiguous same-year APY
+2023,00-0035976,Dan Chisena,WR,No positive season cash evidence
+2023,00-0036233,Donovan Peoples-Jones,WR,Multiple teams or missing weekly team evidence
+2023,00-0036297,Darrynton Evans,RB,Multiple teams or missing weekly team evidence
+2023,00-0036326,Chase Claypool,WR,Multiple teams or missing weekly team evidence
+2023,00-0036328,Antonio Gibson,RB,Latest contract team mismatch
+2023,00-0036414,Cam Akers,RB,Multiple teams or missing weekly team evidence
+2023,00-0036415,Van Jefferson,WR,Multiple teams or missing weekly team evidence
+2023,00-0036450,Ke'Shawn Vaughn,RB,No positive season cash evidence
+2023,00-0036493,Deon Jackson,RB,Multiple teams or missing weekly team evidence
+2023,00-0036626,Dyami Brown,WR,Latest contract team mismatch
+2023,00-0036628,John Bates,TE,Latest contract team mismatch
+2023,00-0036860,Jake Funk,RB,No positive season cash evidence
+2023,00-0036924,Michael Carter,RB,Multiple teams or missing weekly team evidence
+2023,00-0036991,Amari Rodgers,WR,No positive season cash evidence
+2023,00-0037011,Tre' McKitty,TE,No positive season cash evidence
+2023,00-0037299,Keaontay Ingram,RB,No positive season cash evidence
+2023,00-0037805,Jeremy Ruckert,TE,No eligible contract signed by season
+2023,00-0038911,Malik Cunningham,WR,Ambiguous same-year APY
+2024,00-0030564,DeAndre Hopkins,WR,Multiple teams or missing weekly team evidence
+2024,00-0031235,Odell Beckham Jr.,WR,No positive season cash evidence
+2024,00-0031381,Davante Adams,WR,Multiple teams or missing weekly team evidence
+2024,00-0031544,Amari Cooper,WR,Multiple teams or missing weekly team evidence
+2024,00-0032543,Alex Erickson,WR,Latest contract team mismatch
+2024,00-0032688,Robbie Chosen,WR,Latest contract team mismatch
+2024,00-0033045,Ezekiel Elliott,RB,No positive season cash evidence
+2024,00-0033455,Anthony Firkser,TE,Latest contract team mismatch
+2024,00-0033460,John Ross,WR,No positive season cash evidence
+2024,00-0033536,Mike Williams,WR,Multiple teams or missing weekly team evidence
+2024,00-0033893,Dalvin Cook,RB,Latest contract team mismatch
+2024,00-0033943,Josh Reynolds,WR,Multiple teams or missing weekly team evidence
+2024,00-0034177,Tim Boyle,QB,Multiple teams or missing weekly team evidence
+2024,00-0034272,Marquez Valdes-Scantling,WR,Multiple teams or missing weekly team evidence
+2024,00-0034808,John Kelly,RB,No positive season cash evidence
+2024,00-0034928,Steven Sims,WR,Multiple teams or missing weekly team evidence
+2024,00-0035216,Diontae Johnson,WR,Multiple teams or missing weekly team evidence
+2024,00-0035311,Myles Gaskin,RB,No positive season cash evidence
+2024,00-0035341,Trenton Irwin,WR,No positive season cash evidence
+2024,00-0035544,Tom Kennedy,WR,No positive season cash evidence
+2024,00-0035639,Parris Campbell,WR,Ambiguous same-year APY
+2024,00-0035710,Daniel Jones,QB,Latest contract team mismatch
+2024,00-0035726,Jakob Johnson,RB,No positive season cash evidence
+2024,00-0036268,Laviska Shenault Jr.,WR,No positive season cash evidence
+2024,00-0036345,K.J. Osborn,WR,Multiple teams or missing weekly team evidence
+2024,00-0036360,Clyde Edwards-Helaire,RB,Latest contract team mismatch
+2024,00-0036414,Cam Akers,RB,Multiple teams or missing weekly team evidence
+2024,00-0036569,Gary Brightwell,RB,No positive season cash evidence
+2024,00-0036626,Dyami Brown,WR,Latest contract team mismatch
+2024,00-0036628,John Bates,TE,Latest contract team mismatch
+2024,00-0036741,Jack Stoll,TE,No positive season cash evidence
+2024,00-0036877,Jaelon Darden,WR,Multiple teams or missing weekly team evidence
+2024,00-0036906,Khalil Herbert,RB,Multiple teams or missing weekly team evidence
+2024,00-0036913,Kadarius Toney,WR,No positive season cash evidence
+2024,00-0037252,Greg Dulcich,TE,Multiple teams or missing weekly team evidence
+2024,00-0037272,Montrell Washington,WR,No positive season cash evidence
+2024,00-0037382,Brandon Johnson,WR,Latest contract team mismatch
+2024,00-0037451,Rod Williams,TE,No positive season cash evidence
+2024,00-0037609,Aaron Shampklin,RB,Ambiguous same-year APY
+2024,00-0037745,Velus Jones Jr.,WR,Multiple teams or missing weekly team evidence
+2024,00-0037805,Jeremy Ruckert,TE,No eligible contract signed by season
+2024,00-0038104,Tyquan Thornton,WR,No positive season cash evidence
+2024,00-0039062,Jonathan Mingo,WR,Multiple teams or missing weekly team evidence
+2024,00-0039244,Chris Collier,RB,Multiple teams or missing weekly team evidence
+2024,00-0039451,Isaiah Williams,WR,Multiple teams or missing weekly team evidence
+2024,00-0039614,Jermaine Jackson,WR,Ambiguous same-year APY
+2024,00-0039617,Jacob Kibodi,RB,Latest contract team mismatch
+2025,00-0024243,Marcedes Lewis,TE,No positive season cash evidence
+2025,00-0026158,Joe Flacco,QB,Multiple teams or missing weekly team evidence
+2025,00-0030035,Adam Thielen,WR,Multiple teams or missing weekly team evidence
+2025,00-0031236,Brandin Cooks,WR,Multiple teams or missing weekly team evidence
+2025,00-0032211,Tyler Lockett,WR,Multiple teams or missing weekly team evidence
+2025,00-0033572,Jamal Agnew,WR,No positive season cash evidence
+2025,00-0034073,Ross Dwelley,TE,No positive season cash evidence
+2025,00-0034272,Marquez Valdes-Scantling,WR,Multiple teams or missing weekly team evidence
+2025,00-0034367,Nyheim Hines,RB,Multiple teams or missing weekly team evidence
+2025,00-0034407,Ray-Ray McCloud,WR,Multiple teams or missing weekly team evidence
+2025,00-0034418,Cedrick Wilson Jr.,WR,No positive season cash evidence
+2025,00-0034487,Trent Sherfield,WR,Multiple teams or missing weekly team evidence
+2025,00-0034521,Allen Lazard,WR,No positive season cash evidence
+2025,00-0034928,Steven Sims,WR,Latest contract team mismatch
+2025,00-0034955,Brett Rypien,QB,No positive season cash evidence
+2025,00-0034960,Jakobi Meyers,WR,Multiple teams or missing weekly team evidence
+2025,00-0035291,Trayveon Williams,RB,Multiple teams or missing weekly team evidence
+2025,00-0035311,Myles Gaskin,RB,No positive season cash evidence
+2025,00-0035406,Lil'Jordan Humphrey,WR,Multiple teams or missing weekly team evidence
+2025,00-0035567,Craig Reynolds,RB,No positive season cash evidence
+2025,00-0035628,D'Ernest Johnson,RB,Multiple teams or missing weekly team evidence
+2025,00-0035726,Jakob Johnson,RB,Ambiguous same-year APY
+2025,00-0035956,Giovanni Ricci,TE,Latest contract team mismatch
+2025,00-0036360,Clyde Edwards-Helaire,RB,Latest contract team mismatch
+2025,00-0036414,Cam Akers,RB,Multiple teams or missing weekly team evidence
+2025,00-0036425,DeeJay Dallas,RB,Multiple teams or missing weekly team evidence
+2025,00-0036497,Tim Jones,WR,Latest contract team mismatch
+2025,00-0036567,Elijah Mitchell,RB,No positive season cash evidence
+2025,00-0036679,Shane Buechele,QB,No positive season cash evidence
+2025,00-0036950,Avery Williams,RB,Latest contract team mismatch
+2025,00-0036980,Elijah Moore,WR,No positive season cash evidence
+2025,00-0037031,Nikola Kalinic,TE,Latest contract team mismatch
+2025,00-0037258,Dameon Pierce,RB,Multiple teams or missing weekly team evidence
+2025,00-0037340,Zaire Mitchell-Paden,TE,Multiple teams or missing weekly team evidence
+2025,00-0037348,Tanner Conner,TE,No positive season cash evidence
+2025,00-0037524,Tay Martin,WR,No positive season cash evidence
+2025,00-0037545,Rashid Shaheed,WR,Multiple teams or missing weekly team evidence
+2025,00-0037614,John Metchie III,WR,Multiple teams or missing weekly team evidence
+2025,00-0037745,Velus Jones Jr.,WR,Multiple teams or missing weekly team evidence
+2025,00-0038465,Malik Heath,WR,No positive season cash evidence
+2025,00-0038496,Xavier Gipson,WR,Multiple teams or missing weekly team evidence
+2025,00-0038555,Tank Bigsby,RB,Multiple teams or missing weekly team evidence
+2025,00-0038640,Jalen Brooks,WR,Multiple teams or missing weekly team evidence
+2025,00-0038643,Brayden Willis,TE,Ambiguous same-year APY
+2025,00-0038740,Jalen Moreno-Cropper,WR,Ambiguous same-year APY
+2025,00-0038824,Ryan Miller,WR,No positive season cash evidence
+2025,00-0038911,Malik Cunningham,WR,Latest contract team mismatch
+2025,00-0039458,Brenden Bates,TE,Multiple teams or missing weekly team evidence
+2025,00-0039489,Hayden Rucci,TE,No positive season cash evidence
+2025,00-0039890,Adonai Mitchell,WR,Multiple teams or missing weekly team evidence
+2025,00-0040039,Amar Johnson,RB,Latest contract team mismatch
+2025,00-0040317,Jacoby Jones,WR,Ambiguous same-year APY
+2025,00-0040534,Ke'Shawn Williams,WR,Multiple teams or missing weekly team evidence
+2025,00-0040628,Drake Dabney,TE,Latest contract team mismatch
+2025,00-0040629,Dalevon Campbell,WR,No positive season cash evidence

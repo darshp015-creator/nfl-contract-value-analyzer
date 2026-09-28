@@ -1,0 +1,40 @@
+{
+  "retrieved_date": "2026-09-28",
+  "seasons": [
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "coverage": [
+    {
+      "season": 2022,
+      "source_players": 608,
+      "included": 539,
+      "excluded": 69
+    },
+    {
+      "season": 2023,
+      "source_players": 577,
+      "included": 530,
+      "excluded": 47
+    },
+    {
+      "season": 2024,
+      "source_players": 589,
+      "included": 542,
+      "excluded": 47
+    },
+    {
+      "season": 2025,
+      "source_players": 610,
+      "included": 555,
+      "excluded": 55
+    }
+  ],
+  "stats_source": "https://github.com/nflverse/nflverse-data/releases/download/stats_player",
+  "contracts_source": "https://github.com/nflverse/nflverse-data/releases/download/contracts/historical_contracts.parquet",
+  "attribution": "nflverse contributors and Over The Cap",
+  "contract_definition": "APY of the latest identifiable non-practice deal signed by season end; extensions may start later. Historical data retrieved in 2026, not frozen opening-day snapshots.",
+  "cohort_definition": "Supported positions with single-team weekly stats and a matching identifiable contract. Multi-team, ambiguous, and unmatched records are excluded."
+}
