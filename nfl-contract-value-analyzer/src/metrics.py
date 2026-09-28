@@ -22,8 +22,10 @@ def validate_data(frame):
         raise ValueError('Supported positions: QB, RB, WR, TE.')
     for col in ['season', 'games', 'salary', *STATS]:
         df[col] = pd.to_numeric(df[col], errors='coerce')
-        if not np.isfinite(df[col]).all() or (df[col] < 0).any():
-            raise ValueError(f'{col} must contain finite, nonnegative numbers.')
+        if not np.isfinite(df[col]).all():
+            raise ValueError(f'{col} must contain finite numbers.')
+        if col not in ['passing_yards', 'rushing_yards', 'receiving_yards'] and (df[col] < 0).any():
+            raise ValueError(f'{col} must contain nonnegative numbers.')
     if (df.salary <= 0).any():
         raise ValueError('salary must be positive annual dollars, not millions.')
     for col in ['season', 'games', *STATS]:
@@ -31,7 +33,7 @@ def validate_data(frame):
             raise ValueError(f'{col} must contain whole numbers.')
     if not df.games.between(0, 17).all():
         raise ValueError('games must be between 0 and 17.')
-    if (df.loc[df.games.eq(0), STATS].sum(axis=1) > 0).any():
+    if df.loc[df.games.eq(0), STATS].ne(0).any().any():
         raise ValueError('Players with zero games cannot have production.')
     if df.duplicated(['player_id', 'season']).any():
         raise ValueError('Use one aggregate row per player_id and season.')
