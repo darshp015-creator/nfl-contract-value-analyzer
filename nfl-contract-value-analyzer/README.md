@@ -1,8 +1,8 @@
 # NFL Contract Value Analyzer
 
-Streamlit dashboard with Pandas, Plotly, and scikit-learn. **Bundled data is entirely fictional.** Team abbreviations and season labels are sample categories, not historical observations.
+A Streamlit dashboard for position-relative NFL production and contract comparisons. The default dataset contains **2,166 real player-season records from 2022–2025**, including 555 players in the 2025 regular season (the season ending in early 2026). Fictional demo data remains a separate option.
 
-## Run
+## Run locally
 Use Python 3.12:
 ```sh
 python3 -m venv .venv
@@ -11,58 +11,66 @@ python -m pip install -r requirements.txt
 python -m streamlit run app.py
 ```
 Windows activation: `.venv\Scripts\activate`.
+Open the Local URL printed by Streamlit in your browser.
 
 ## Features
-- Season, position, team, games, and name filters
-- League rankings, salary-vs-production scatterplot, player detail view
-- CSV uploads and filtered CSV exports
-- 96 demo records: 48 fictional players across 2024 and 2025
+- Position-specific production scores, with a box-score fallback for older CSV uploads
+- Contract APY, season cap hit, and season cash paid selectors
+- Rookie/veteran contract filters and optional separate peer benchmarks
+- Automatic real-data loading with source dates, coverage, and downloadable exclusions
+- Rankings, Plotly scatterplot, player details, same-position comparisons, and historical trends
+- Chronological model checks against median salary, with empirical error bands
 
-## Files
-- `app.py`: dashboard entry point
-- `requirements.txt`: pinned dependencies
-- `src/metrics.py`: validation and production score
-- `src/valuation.py`: position-relative salary model
-- `data/players.csv`: demo data
-- `tests/test_analyzer.py`: model and dashboard checks
-- `.streamlit/config.toml`: theme
+Display filters do not change the fitted peer population. Salary choices and scoring options do. Minimum workload filters help identify small samples.
 
-## Model
-Production is a PPR-style counting proxy: passing yards × .04 + passing TDs × 4 − interceptions × 2 + rushing yards × .1 + rushing TDs × 6 + receptions + receiving yards × .1 + receiving TDs × 6. Season totals retain missed-game impact. Midrank percentiles compare only the same position and season.
+## Scoring and valuation
+Scores combine weighted midrank percentiles within position and season:
 
-Each player's benchmark excludes their own salary. With at least five other players and variable production, StandardScaler + Ridge(alpha=5) predicts log annual salary from production. Exponentiated predictions are clamped to the observed peer salary range. Smaller or constant cohorts use peer median; no peers means no valuation. All calculations precede display filters.
+| Position | Components and weights |
+| --- | --- |
+| QB | Passing EPA per attempt plus sack 45%; CPOE 25%; lower turnover rate 15%; passing plus rushing EPA 15% |
+| RB | Rushing EPA per carry 35%; scrimmage yards 25%; yards per carry 20%; receiving EPA 20% |
+| WR / TE | Receiving EPA per target 35%; yards per target 25%; team target share 25%; catch rate 15% |
 
-Value ratio = benchmark / salary; surplus = benchmark − salary. Ratios ≥1.2 indicate below-benchmark salary; ≤.8 indicate above-benchmark salary. Position rank compares ratios within each position and season. This is a descriptive geometric salary benchmark, not expected future value.
+EPA means expected points added; CPOE means completion percentage over expectation. Missing components are omitted and the remaining weights are renormalized. These weights are transparent design choices, not learned causal contributions. Routes, blocking, defensive play, age, guarantees, and future performance are absent. Yards per route run is unavailable in the public source used here.
 
-Only QB, RB, WR, and TE are supported. Counting statistics omit blocking, defense, scheme, age, guarantees, contract timing, and future performance. Rookie contracts can look unusually efficient. APY differs from cap hit and cash paid. Demo outcomes have no real-world valuation meaning. The model has not been validated on real NFL data.
+Each player's benchmark excludes their own cost. With at least eight peers and variable scores, a StandardScaler + Ridge(alpha=5) model predicts log cost from production score and games. Predictions are bounded by the observed peer cost range. Smaller cohorts use median cost. Peer groups share season, position, and (by default) rookie/veteran/unknown deal category. No peers means no benchmark. Value ratio = benchmark / cost; surplus = benchmark − cost. These are descriptive comparisons, not estimates of true player worth.
 
-## Real data
-Upload a conforming CSV or replace `data/players.csv`. See `data/README.md`. Use one aggregate regular-season row per stable player ID and season. Document sources, retrieval dates, APY timing, traded-player conventions, and unmatched rows. Do not mix demo and real data. No external ingestion is wired in.
+The detail view's 10th–90th percentile peer cost range describes market spread, not prediction uncertainty. The historical test trains only on earlier seasons and compares against their median cost. Error bands use absolute errors from strictly earlier test seasons, with at least 20 calibration records in the cohort. Their observed coverage is reported; no coverage guarantee is claimed. Test-season production is already known: this is retrospective salary fit, not a preseason forecast. Players may recur across seasons; dollars are nominal and contracts are reconstructed from a later snapshot.
+
+Under default APY/position scoring/separate deal settings, the 2025 test covers 520 players: mean absolute error is about $3.61M versus $4.60M for the median baseline (21.5% lower). Coverage and results change with the cost/scoring choice. Cohorts without enough training records are omitted.
+
+## Data and refresh
+Sources: [nflverse player statistics](https://github.com/nflverse/nflverse-data/releases/tag/stats_player) and [nflverse historical Over The Cap contracts](https://github.com/nflverse/nflverse-data/releases/tag/contracts). Snapshot retrieved September 28, 2026. See `data/README.md` and the dashboard's Data & methods tab.
+
+The app automatically opens the bundled snapshot; it does not schedule remote refreshes. Rebuild the snapshot explicitly:
+```sh
+python scripts/prepare_data.py
+```
+This downloads public source files to `.data-cache/`; delete that cache before requesting a fresh download. Review resulting coverage and exclusions before publishing. APY is the latest identifiable deal signed by season end, which can include extensions starting later. Single-team players with verified contract matches are included; multi-team and ambiguous records are excluded.
+
+## Project layout
+- `app.py`: dashboard
+- `src/metrics.py`: core CSV validation and box-score proxy
+- `src/analytics.py`: position scoring, peer valuation, chronological tests
+- `src/valuation.py`: retained original benchmark API
+- `data/nfl_2022_2025.csv`, `sources.json`, `exclusions.csv`: real snapshot and provenance
+- `data/players.csv`: fictional demo data
+- `scripts/prepare_data.py`: reproducible source join
+- `tests/`: model and dashboard checks
 
 ## Tests
 ```sh
 python -m pip install pytest
 python -m pytest -q
 ```
+Tests check salary exclusion, chronological leakage, cost switching, missing metrics, contract groups, and dashboard interactions.
 
-## GitHub upload
-Open your repository, choose **Add file → Upload files** (or **uploading an existing file** for an empty repository). Drag the contents of this folder into the upload area, including `src/` and `data/`, and click **Commit changes**. Upload the extracted contents, not the ZIP or outer folder. Verify `app.py` is visible at repository root.
+## GitHub and Streamlit deployment
+The existing repository stores the project inside `nfl-contract-value-analyzer/`:
+- Repository: `darshp015-creator/nfl-contract-value-analyzer`
+- Branch: `main`
+- Main file path: `nfl-contract-value-analyzer/app.py`
+- Python: 3.12; no secrets needed
 
-Alternatively, from this folder:
-```sh
-git init -b main
-git add .
-git commit -m "Build NFL analyzer MVP"
-git remote add origin https://github.com/darshp015-creator/nfl-contract-value-analyzer.git
-git push -u origin main
-```
-Authenticate normally; never put credentials in files.
-
-## Streamlit Community Cloud
-1. Sign in at https://share.streamlit.io/ and choose Create app.
-2. Select `darshp015-creator/nfl-contract-value-analyzer`.
-3. Branch: `main`. Main file path: `app.py`.
-4. Advanced settings: Python 3.12. No secrets required.
-5. Deploy, then confirm the demo warning and dashboard render.
-
-The branch and file must already be committed on GitHub. See the official deployment guide: https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/deploy
+Keep `requirements.txt`, `src/`, and `data/` beside `app.py`. Upload extracted files to the matching repository folder, then commit. Community Cloud updates from GitHub. If starting a new repository with the project contents at its root, use `app.py` instead. Do not upload the ZIP as the application.
