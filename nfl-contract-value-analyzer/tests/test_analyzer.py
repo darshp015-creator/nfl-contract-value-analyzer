@@ -6,6 +6,18 @@ from src.metrics import validate_data
 from src.valuation import evaluate_players
 ROOT = Path(__file__).resolve().parents[1]
 
+def test_negative_yards_are_valid_but_negative_counts_are_not():
+    df = pd.read_csv(ROOT/'data/players.csv').iloc[:1].copy()
+    df.loc[0, 'rushing_yards'] = -10
+    assert validate_data(df).rushing_yards.iloc[0] == -10
+    df.loc[0, 'games'] = 0
+    with pytest.raises(ValueError, match='zero games'):
+        validate_data(df)
+    df.loc[0, 'games'] = 1
+    df.loc[0, 'receptions'] = -1
+    with pytest.raises(ValueError, match='nonnegative'):
+        validate_data(df)
+
 def test_model():
     df = pd.read_csv(ROOT/'data/players.csv')
     result = evaluate_players(df)
@@ -20,16 +32,31 @@ def test_model():
         validate_data(df)
 
 def test_dashboard():
-    app = AppTest.from_file(str(ROOT/'app.py')).run(timeout=30)
+    app = AppTest.from_file(str(ROOT/'app.py'),default_timeout=60).run()
     assert not app.exception
-    assert app.metric[0].value == '48'
-    assert len(app.warning) == 1
-    assert len(app.get('plotly_chart')) == 1
-    app.sidebar.multiselect[0].set_value(['QB']).run()
+    assert app.metric[0].value == '555'
+    assert len(app.tabs) == 6
+    assert not any('DEMO' in w.value for w in app.warning)
+    app.multiselect(key='positions').set_value(['QB']).run()
     assert not app.exception
-    assert app.metric[0].value == '12'
-    next(w for w in app.selectbox if w.label == 'Choose a player').set_value('demo-QB-05').run()
-    assert any('Demo QB 05' in s.value for s in app.subheader)
-    app.sidebar.text_input[0].set_value('no such player').run()
+    assert app.metric[0].value == '78'
+    app.selectbox(key='contract_filter').set_value('Rookie deal').run()
+    assert app.dataframe[0].value.contract_group.eq('Rookie deal').all()
+    app.selectbox(key='cost').set_value('Season cap hit').run()
     assert not app.exception
-    assert 'No players match' in app.info[0].value
+    app.selectbox(key='compare_position').set_value('WR').run()
+    assert not app.exception
+    assert app.selectbox(key='compare_a').value != app.selectbox(key='compare_b').value
+    app.text_input(key='search').set_value('no such player').run()
+    assert not app.exception
+    assert any('No players match' in i.value for i in app.info)
+    app.radio(key='source').set_value('Demo').run()
+    assert not app.exception
+    assert app.selectbox(key='scoring').value == 'Box-score proxy'
+    assert app.selectbox(key='cost').value == 'Contract APY'
+
+def test_validation_view():
+    app = AppTest.from_file(str(ROOT/'app.py'),default_timeout=60).run()
+    app.button(key='run_validation').click().run()
+    assert not app.exception
+    assert any('Latest test season (2025)' in i.value for i in app.info)
