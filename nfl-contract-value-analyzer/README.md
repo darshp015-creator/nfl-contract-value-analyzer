@@ -47,7 +47,7 @@ The app automatically opens the bundled snapshot; it does not schedule remote re
 ```sh
 python scripts/prepare_data.py
 ```
-This downloads public source files to `.data-cache/`; delete that cache before requesting a fresh download. Review resulting coverage and exclusions before publishing. APY is the latest identifiable deal signed by season end, which can include extensions starting later. Single-team players with verified contract matches are included; multi-team and ambiguous records are excluded.
+This downloads public source files to `.data-cache/`; use `python scripts/prepare_data.py --refresh` to download fresh source files. Source file hashes and retrieval dates are recorded in `sources.json`. Review resulting coverage and exclusions before publishing. APY is the latest identifiable deal signed by season end, which can include extensions starting later. Single-team players with verified contract matches are included; multi-team and ambiguous records are excluded.
 
 ## Project layout
 - `app.py`: dashboard

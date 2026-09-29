@@ -21,6 +21,9 @@ def validate_history(data,same_deal):
 def money(value):
     return f'${value/1e6:,.2f}M' if pd.notna(value) else 'Unavailable'
 
+def md_money(value):
+    return money(value).replace('$',r'\$')
+
 def numeric(value,suffix='',decimals=2):
     return f'{value:,.{decimals}f}{suffix}' if pd.notna(value) else 'Unavailable'
 
@@ -60,7 +63,8 @@ except (ValueError,KeyError,TypeError) as exc:
 if data.is_demo.any():
     st.warning('DEMO DATA — fictional players, salaries, and statistics.')
 elif source=='NFL 2022–2025':
-    st.info('Real regular-season data · nflverse + Over The Cap · snapshot retrieved September 28, 2026. Excludes playoffs and unresolved contract matches.')
+    snapshot_date=json.loads((ROOT/'data/sources.json').read_text())['retrieved_date']
+    st.info(f'Real regular-season data · nflverse + Over The Cap · snapshot retrieved {snapshot_date}. Excludes playoffs and unresolved contract matches.')
 else:
     st.info('Uploaded data. Its accuracy and provenance have not been verified by the app.')
 with st.sidebar:
@@ -132,7 +136,7 @@ with details:
         st.write(f'**{row.value_label}** · Production score: **{numeric(row.production_score,decimals=1)} / 100**')
         if row.small_sample:
             st.warning('Small workload: efficiency rates can be unstable. Check the raw stats and opportunity count.')
-        st.caption(f'Peer cost range (10th–90th percentile): {money(row.peer_low)} to {money(row.peer_high)}. This shows peer spread, not a confidence interval.')
+        st.caption(f'Peer cost range (10th–90th percentile): {md_money(row.peer_low)} to {md_money(row.peer_high)}. This shows peer spread, not a confidence interval.')
         if scoring=='Position metrics':
             st.dataframe(pd.DataFrame({'Metric':[LABELS[col] for col,_,_ in COMPONENTS[row.position]],'Value':[row[col] for col,_,_ in COMPONENTS[row.position]],'Weight':[weight for _,weight,_ in COMPONENTS[row.position]]}),hide_index=True,width='stretch')
             st.caption(f'{int(row.components_used)} of 4 components available. Missing components are omitted and available weights renormalized; no production is invented.')
@@ -192,7 +196,7 @@ with validation:
                 'band_coverage':st.column_config.NumberColumn('Observed band coverage (0–1)',format='%.2f')})
             latest=predictions[predictions.season.eq(predictions.season.max())]
             wins=latest.absolute_error.mean()<latest.baseline_error.mean()
-            st.info(f'Latest test season ({int(latest.season.max())}): model MAE {money(latest.absolute_error.mean())}; baseline MAE {money(latest.baseline_error.mean())}. '+('The model improves on this baseline.' if wins else 'The model does not beat this baseline. Treat its valuations cautiously.'))
+            st.info(f'Latest test season ({int(latest.season.max())}): model MAE {md_money(latest.absolute_error.mean())}; baseline MAE {md_money(latest.baseline_error.mean())}. '+('The model improves on this baseline.' if wins else 'The model does not beat this baseline. Treat its valuations cautiously.'))
             st.caption('Error bands use the 90th percentile of absolute prediction errors from strictly earlier validation seasons in the same cohort (minimum 20). Coverage is measured, not guaranteed. Early seasons have no band.')
             st.download_button('Download test predictions and error bands',predictions.to_csv(index=False).encode(),'historical-validation.csv','text/csv')
 with sources:
