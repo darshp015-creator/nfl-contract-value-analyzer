@@ -60,3 +60,19 @@ def test_validation_view():
     app.button(key='run_validation').click().run()
     assert not app.exception
     assert any('Latest test season (2025)' in i.value for i in app.info)
+
+
+def test_adjustment_and_cap_controls():
+    app=AppTest.from_file(str(ROOT/'app.py'),default_timeout=60).run()
+    assert not app.exception
+    assert app.checkbox(key='adjust_samples').value
+    assert app.checkbox(key='cap_view').value
+    assert any('Why this player ranks here' in h.value for h in app.subheader)
+    initial=app.dataframe[0].value.set_index('player_name').production_score.sort_index()
+    app.checkbox(key='adjust_samples').uncheck().run()
+    raw=app.dataframe[0].value.set_index('player_name').production_score.sort_index()
+    assert not initial.equals(raw)
+    ratios=app.dataframe[0].value.set_index('player_name').value_ratio.sort_index()
+    app.checkbox(key='cap_view').uncheck().run()
+    pd.testing.assert_series_equal(ratios,app.dataframe[0].value.set_index('player_name').value_ratio.sort_index())
+    assert not app.exception

@@ -75,3 +75,53 @@ def test_time_split_has_no_test_salary_leakage(real):
     for col in ['prediction','baseline','lower','upper']:
         np.testing.assert_allclose(pred.loc[latest,col],changed.loc[latest,col],equal_nan=True)
     assert pred.loc[latest,'absolute_error'].mean()!=changed.loc[latest,'absolute_error'].mean()
+
+
+def test_small_samples_move_efficiency_toward_midpoint(real):
+    d=real[real.position.eq('WR')&real.season.eq(2025)].head(3).copy()
+    d['targets']=[2,100,0]; d['receiving_epa']=[10,500,0]
+    d['receptions']=[2,50,0];d['receiving_yards']=[40,2000,0]
+    d['team_targets']=500
+    adjusted=score_players(d)
+    raw=score_players(d,adjust_samples=False)
+    for idx in [0,1]:
+        assert abs(adjusted.loc[idx,'catch_rate_score']-50)<abs(raw.loc[idx,'catch_rate_score']-50)
+    assert adjusted.loc[0,'catch_rate_reliability']<adjusted.loc[1,'catch_rate_reliability']
+    np.testing.assert_allclose(adjusted.target_share_score,raw.target_share_score,equal_nan=True)
+    assert pd.isna(adjusted.loc[2,'production_score'])
+    np.testing.assert_allclose(adjusted.receiving_yards,d.receiving_yards)
+    np.testing.assert_allclose(raw.production_score,raw.raw_production_score,equal_nan=True)
+
+
+def test_cap_normalization_translation_and_missing_year(real):
+    d=score_players(real[real.position.eq('QB')])
+    from src.context import SALARY_CAPS
+    d['cost']=d.season.map(SALARY_CAPS)*.02
+    d['eligible']=d.production_score.notna()
+    _,pred=chronological_validation(d,normalize_cap=True)
+    np.testing.assert_allclose(pred.prediction,pred.season.map(SALARY_CAPS)*.02,rtol=1e-10)
+    np.testing.assert_allclose(pred.baseline,pred.prediction,rtol=1e-10)
+    changed=d.copy();changed.loc[changed.season.eq(2025),'cost']*=2
+    _,other=chronological_validation(changed,normalize_cap=True)
+    mask=pred.season.eq(2025)
+    for col in ['prediction','baseline','lower','upper']:
+        np.testing.assert_allclose(pred.loc[mask,col],other.loc[mask,col],equal_nan=True)
+    d.loc[d.season.eq(2025),'season']=2030
+    _,pred=chronological_validation(d,normalize_cap=True)
+    assert 2030 not in pred.season.values
+
+
+def test_explanations_cover_unavailable_and_unknown(real):
+    from src.context import explain_player
+    from src.analytics import COMPONENTS,LABELS
+    row=evaluate(real[real.season.eq(2025)].head(1)).iloc[0]
+    text=' '.join(explain_player(row,COMPONENTS[row.position],LABELS))
+    assert 'No value ranking' in text
+    assert 'Thin peer group' in text
+    d=real[real.season.eq(2025)&real.position.eq('WR')].head(15).copy()
+    d['contract_type']='Unknown'
+    result=evaluate(d)
+    row=result[result.benchmark_salary.notna()].iloc[0]
+    text=' '.join(explain_player(row,COMPONENTS[row.position],LABELS))
+    assert 'Contract classification is unknown' in text
+    assert 'cost is excluded' in text
