@@ -23,6 +23,16 @@ Open the Local URL printed by Streamlit in your browser.
 
 Display filters do not change the fitted peer population. Salary choices and scoring options do. Minimum workload filters help identify small samples.
 
+## Ranking improvements
+
+Two sidebar controls are enabled by default:
+- **Adjust for small samples:** efficiency component percentiles use `50 + n/(n+k) * (raw percentile - 50)`. QB opportunity strength k=100, rushing k=75, receiving k=50. Relevant attempts/plays/carries/targets determine n. Season totals and target share remain unchanged; missing and zero-workload values remain unavailable. Raw production statistics are preserved. These are transparent starter strengths, not calibrated confidence estimates.
+- **Compare costs as % of salary cap:** scatterplots and trends use the selected cost divided by that season's league base cap. Historical models and their median baseline fit costs as cap shares, then convert predictions and earlier error bands back to test-season dollars. Dollar costs remain available. The shared denominator does not change same-season rankings. Unsupported seasons are excluded only from normalized historical tests and cap charts.
+
+Player detail includes **Why this player ranks here**: raw/adjusted score, workload, highest/lowest score components, peer cohort size, fit method, ratio/rank, and cautions for small or unknown cohorts. Component explanations describe the score; they are not causal salary contributions.
+
+League base caps: 2022 $208.2M; 2023 $224.8M; 2024 $255.4M; 2025 $279.2M. Sources: [NFL 2022–2024](https://www.nfl.com/news/nfl-salary-cap-set-at-255-4m-per-team-for-2024-regular-season), [NFL 2025](https://www.nfl.com/news/nfl-sets-salary-cap-at-279-2-million-per-team-for-2025-season). Excludes team rollover and adjustments. APY/cash shares describe affordability relative to the cap, not cap accounting.
+
 ## Scoring and valuation
 Scores combine weighted midrank percentiles within position and season:
 
@@ -36,9 +46,9 @@ EPA means expected points added; CPOE means completion percentage over expectati
 
 Each player's benchmark excludes their own cost. With at least eight peers and variable scores, a StandardScaler + Ridge(alpha=5) model predicts log cost from production score and games. Predictions are bounded by the observed peer cost range. Smaller cohorts use median cost. Peer groups share season, position, and (by default) rookie/veteran/unknown deal category. No peers means no benchmark. Value ratio = benchmark / cost; surplus = benchmark − cost. These are descriptive comparisons, not estimates of true player worth.
 
-The detail view's 10th–90th percentile peer cost range describes market spread, not prediction uncertainty. The historical test trains only on earlier seasons and compares against their median cost. Error bands use absolute errors from strictly earlier test seasons, with at least 20 calibration records in the cohort. Their observed coverage is reported; no coverage guarantee is claimed. Test-season production is already known: this is retrospective salary fit, not a preseason forecast. Players may recur across seasons; dollars are nominal and contracts are reconstructed from a later snapshot.
+The detail view's 10th–90th percentile peer cost range describes market spread, not prediction uncertainty. The historical test trains only on earlier seasons and compares against their median cost. Error bands use absolute errors from strictly earlier test seasons, with at least 20 calibration records in the cohort. Their observed coverage is reported; no coverage guarantee is claimed. Test-season production is already known: this is retrospective salary fit, not a preseason forecast. Players may recur across seasons; the optional cap adjustment accounts for league cap growth, and contracts are reconstructed from a later snapshot.
 
-Under default APY/position scoring/separate deal settings, the 2025 test covers 520 players: mean absolute error is about $3.61M versus $4.60M for the median baseline (21.5% lower). Coverage and results change with the cost/scoring choice. Cohorts without enough training records are omitted.
+With workload adjustment and cap normalization both OFF, using APY/position scoring/separate deals, the 2025 test covers 520 players: mean absolute error is about $3.61M versus $4.60M for the median baseline (21.5% lower). Coverage and results change with the cost/scoring choice. Cohorts without enough training records are omitted.
 
 ## Data and refresh
 Sources: [nflverse player statistics](https://github.com/nflverse/nflverse-data/releases/tag/stats_player) and [nflverse historical Over The Cap contracts](https://github.com/nflverse/nflverse-data/releases/tag/contracts). Snapshot retrieved September 28, 2026. See `data/README.md` and the dashboard's Data & methods tab.
@@ -53,6 +63,7 @@ This downloads public source files to `.data-cache/`; use `python scripts/prepar
 - `app.py`: dashboard
 - `src/metrics.py`: core CSV validation and box-score proxy
 - `src/analytics.py`: position scoring, peer valuation, chronological tests
+- `src/context.py`: sourced league caps, workload strengths, ranking explanations
 - `src/valuation.py`: retained original benchmark API
 - `data/nfl_2022_2025.csv`, `sources.json`, `exclusions.csv`: real snapshot and provenance
 - `data/players.csv`: fictional demo data

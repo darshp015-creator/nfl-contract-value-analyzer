@@ -5,18 +5,19 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 from src.metrics import STATS
+from src.context import SALARY_CAPS, RATE_WORKLOAD, explain_player
 from src.analytics import ADVANCED_REQUIRED, COMPONENTS, COSTS, LABELS, evaluate, chronological_validation
 
 st.set_page_config(page_title='NFL Contract Value Analyzer',page_icon='🏈',layout='wide')
 ROOT=Path(__file__).resolve().parent
 
 @st.cache_data
-def analyze(contents,cost_label,scoring,same_deal):
-    return evaluate(pd.read_csv(BytesIO(contents)),cost_label,scoring,same_deal)
+def analyze(contents,cost_label,scoring,same_deal,adjust_samples):
+    return evaluate(pd.read_csv(BytesIO(contents)),cost_label,scoring,same_deal,adjust_samples)
 
 @st.cache_data
-def validate_history(data,same_deal):
-    return chronological_validation(data,same_deal)
+def validate_history(data,same_deal,normalize_cap):
+    return chronological_validation(data,same_deal,normalize_cap)
 
 def money(value):
     return f'${value/1e6:,.2f}M' if pd.notna(value) else 'Unavailable'
@@ -53,10 +54,12 @@ with st.sidebar:
     scoring=st.selectbox('Production scoring',['Position metrics','Box-score proxy'] if advanced else ['Box-score proxy'],key='scoring')
     if not advanced:
         st.caption('Advanced fields are absent. This file supports the box-score proxy only.')
+    adjust_samples=st.checkbox('Adjust for small samples',value=True,key='adjust_samples',disabled=scoring!='Position metrics',help='Pull efficiency component scores toward 50 when opportunities are limited. Volume components remain unchanged.')
+    cap_view=st.checkbox('Compare costs as % of salary cap',value=True,key='cap_view',help='Use each season’s league base cap for charts and historical model fitting. Dollar values stay available.')
     same_deal=st.checkbox('Benchmark within contract group',value=True,key='same_deal',help='Compare rookie deals with rookie deals and veteran deals with veteran deals. Unknown contracts form a separate group.')
 try:
     with st.spinner('Calculating position benchmarks…'):
-        data=analyze(contents,cost_label,scoring,same_deal)
+        data=analyze(contents,cost_label,scoring,same_deal,adjust_samples)
 except (ValueError,KeyError,TypeError) as exc:
     st.error(f'Could not analyze this dataset: {exc}')
     st.stop()
@@ -90,6 +93,12 @@ if min_opps and advanced:
     view=view[view.opportunities.ge(min_opps)]
 view=view.sort_values({'Value ratio':'value_ratio','Cost surplus':'surplus','Production score':'production_score'}[sort_by],ascending=False,na_position='last')
 st.caption(f'{cost_label} in nominal USD. Benchmarks use all eligible players in the same season and position'+(' and contract group.' if same_deal else '.')+' Display filters do not refit the model.')
+cost_axis='cost_cap_pct' if cap_view else 'cost'
+cost_axis_label=cost_label+(' (% of league cap)' if cap_view else ' (USD)')
+if cap_view:
+    st.caption('Uses the league base cap, excluding team rollover and adjustments. APY/cash percentages are comparisons with the cap, not actual cap charges. Same-season value ratios are unchanged by this unit conversion.')
+    if data.league_cap.isna().any():
+        st.warning('Some seasons have no verified league cap. Their cap percentages and normalized historical tests are unavailable; dollar rankings remain available.')
 a,b,c,d=st.columns(4)
 a.metric('Players in view',len(view))
 b.metric('Total selected cost',money(view.loc[view.cost.gt(0),'cost'].sum()) if view.cost.gt(0).any() else 'Unavailable')
@@ -104,20 +113,23 @@ with rankings:
         if missing:
             st.caption(f'{missing} displayed players lack a positive selected cost or a usable score. Their valuations remain unavailable.')
         st.subheader('Cost vs. production')
-        plotted=view[view.eligible]
+        plotted=view[view.eligible & view[cost_axis].notna()]
         if not plotted.empty:
-            fig=px.scatter(plotted,x='cost',y='production_score',color='position',symbol='contract_group',size='games',size_max=22,
+            fig=px.scatter(plotted,x=cost_axis,y='production_score',color='position',symbol='contract_group',size='games',size_max=22,
                            hover_name='player_name',hover_data={'team':True,'cost':':$,.0f','value_ratio':':.2f','small_sample':True},
-                           labels={'cost':cost_label+' (USD)','production_score':'Production score (0–100)','contract_group':'Contract'},
+                           labels={cost_axis:cost_axis_label,'production_score':'Production score (0–100)','contract_group':'Contract'},
                            color_discrete_sequence=['#22c55e','#38bdf8','#fbbf24','#c084fc'])
             fig.update_traces(marker={'sizemin':5})
             fig.update_layout(height=430,margin=dict(l=10,r=10,t=10,b=10))
-            fig.update_yaxes(range=[0,100]);fig.update_xaxes(tickprefix='$',tickformat='~s')
+            fig.update_yaxes(range=[0,100])
+            fig.update_xaxes(ticksuffix='%' if cap_view else '',tickprefix='' if cap_view else '$',tickformat='.1f' if cap_view else '~s')
             st.plotly_chart(fig,use_container_width=True)
         st.caption('Higher value ratio means lower cost relative to this model, not proven football value. Small-sample flags use QB <100, RB <75, WR/TE <50 opportunities.')
-        columns=['player_name','team','position','contract_group','games','cost','production_score','benchmark_salary','surplus','value_ratio','small_sample','value_label']
+        columns=['player_name','team','position','contract_group','games','cost','cost_cap_pct','raw_production_score','production_score','benchmark_salary','surplus','value_ratio','small_sample','value_label']
         st.dataframe(view[columns],hide_index=True,width='stretch',column_config={
             'player_name':'Player','contract_group':'Contract','cost':st.column_config.NumberColumn(cost_label,format='$%d'),
+            'cost_cap_pct':st.column_config.NumberColumn('Cost / league cap',format='%.2f%%'),
+            'raw_production_score':st.column_config.NumberColumn('Score before adjustment',format='%.1f'),
             'production_score':st.column_config.ProgressColumn('Production score',min_value=0,max_value=100,format='%.1f'),
             'benchmark_salary':st.column_config.NumberColumn('Peer cost benchmark',format='$%d'),
             'surplus':st.column_config.NumberColumn('Cost surplus',format='$%d'),
@@ -134,11 +146,15 @@ with details:
         x,y,z=st.columns(3)
         x.metric(cost_label,money(row.cost)); y.metric('Peer cost benchmark',money(row.benchmark_salary));z.metric('Value ratio',numeric(row.value_ratio,'×'))
         st.write(f'**{row.value_label}** · Production score: **{numeric(row.production_score,decimals=1)} / 100**')
+        st.caption(f'Selected cost / league cap: {numeric(row.cost_cap_pct, chr(37))} · Benchmark / league cap: {numeric(row.benchmark_cap_pct, chr(37))}')
+        st.subheader('Why this player ranks here')
+        for explanation in explain_player(row,COMPONENTS[row.position],LABELS,same_deal):
+            st.write('• '+explanation)
         if row.small_sample:
             st.warning('Small workload: efficiency rates can be unstable. Check the raw stats and opportunity count.')
         st.caption(f'Peer cost range (10th–90th percentile): {md_money(row.peer_low)} to {md_money(row.peer_high)}. This shows peer spread, not a confidence interval.')
         if scoring=='Position metrics':
-            st.dataframe(pd.DataFrame({'Metric':[LABELS[col] for col,_,_ in COMPONENTS[row.position]],'Value':[row[col] for col,_,_ in COMPONENTS[row.position]],'Weight':[weight for _,weight,_ in COMPONENTS[row.position]]}),hide_index=True,width='stretch')
+            st.dataframe(pd.DataFrame({'Metric':[LABELS[col] for col,_,_ in COMPONENTS[row.position]],'Value':[row[col] for col,_,_ in COMPONENTS[row.position]],'Weight':[weight for _,weight,_ in COMPONENTS[row.position]],'Before adjustment':[row[col+'_raw_score'] for col,_,_ in COMPONENTS[row.position]],'Score used':[row[col+'_score'] for col,_,_ in COMPONENTS[row.position]],'Observed-score weight':[row[col+'_reliability'] for col,_,_ in COMPONENTS[row.position]]}),hide_index=True,width='stretch')
             st.caption(f'{int(row.components_used)} of 4 components available. Missing components are omitted and available weights renormalized; no production is invented.')
         st.dataframe(pd.DataFrame({'Statistic':[s.replace('_',' ').title() for s in STATS],'Total':[int(row[s]) for s in STATS]}),hide_index=True,width='stretch')
         st.caption('Benchmark method: '+row.model_method)
@@ -156,8 +172,9 @@ with compare:
         pair=pool.set_index('player_id').loc[[p1,p2]]
         for col,(_,row) in zip([left,right],pair.iterrows()):
             col.metric(cost_label,money(row.cost));col.metric('Production score',numeric(row.production_score,decimals=1));col.metric('Value ratio',numeric(row.value_ratio,'×'))
+            col.caption(f'Cost / league cap: {numeric(row.cost_cap_pct, chr(37))}; score before adjustment: {numeric(row.raw_production_score,decimals=1)}')
             col.caption(f'{row.contract_group} · {int(row.games)} games · {numeric(row.opportunities,decimals=0)} opportunities')
-        metric_cols=['games','opportunities','production_score','benchmark_salary','surplus',*STATS]
+        metric_cols=['games','opportunities','raw_production_score','production_score','cost_cap_pct','benchmark_salary','surplus',*STATS]
         if scoring=='Position metrics':
             metric_cols += [col for col,_,_ in COMPONENTS[cp]]
         table=pair[metric_cols].T
@@ -175,17 +192,18 @@ with trends:
         st.info('Only one matched season is available for this player. Missing seasons are not filled in.')
     else:
         l,r=st.columns(2)
-        l.plotly_chart(px.line(history,x='season',y='cost',markers=True,labels={'cost':cost_label+' (USD)','season':'Season'}).update_xaxes(dtick=1),use_container_width=True)
+        l.plotly_chart(px.line(history,x='season',y='cost',markers=True,labels={cost_axis:cost_axis_label,'season':'Season'}).update_xaxes(dtick=1),use_container_width=True)
         r.plotly_chart(px.line(history,x='season',y='production_score',markers=True,labels={'production_score':'Position-relative score','season':'Season'}).update_xaxes(dtick=1).update_yaxes(range=[0,100]),use_container_width=True)
-    st.dataframe(history[['season','team','position','contract_group','games','salary','cap_hit','cash_paid','production_score','value_ratio']],hide_index=True,width='stretch')
+    st.dataframe(history[['season','team','position','contract_group','games','salary','cap_hit','cash_paid','cost_cap_pct','raw_production_score','production_score','value_ratio']],hide_index=True,width='stretch')
     st.caption('Matched seasons only. Costs are nominal dollars; APY includes extensions signed by that season. Scores are relative to each season’s position cohort.')
 with validation:
     st.subheader('Does the model beat a simple baseline?')
     st.write('Train on earlier seasons and test on the next complete season. The baseline is the median cost in the same training cohort. Lower mean absolute error (MAE) is better.')
-    st.caption('This evaluates retrospective salary fit using test-season production—not a preseason forecast. Test salaries never enter training. Same players may appear in different seasons. Nominal costs are not inflation-adjusted.')
+    st.caption('This evaluates retrospective salary fit using test-season production—not a preseason forecast. Test salaries never enter training. Same players may appear in different seasons. Cap normalization, when selected, fits costs as a share of each season’s league cap and converts predictions back to test-season dollars.')
+    st.caption('Historical cost basis: '+('percentage of league base cap.' if cap_view else 'nominal dollars.'))
     if st.button('Run historical test',key='run_validation'):
         with st.spinner('Testing later seasons against earlier data…'):
-            summary,predictions=validate_history(data,same_deal)
+            summary,predictions=validate_history(data,same_deal,cap_view)
         if summary.empty:
             st.info('Need at least two seasons and eight eligible earlier-season records per cohort.')
         else:
@@ -197,7 +215,7 @@ with validation:
             latest=predictions[predictions.season.eq(predictions.season.max())]
             wins=latest.absolute_error.mean()<latest.baseline_error.mean()
             st.info(f'Latest test season ({int(latest.season.max())}): model MAE {md_money(latest.absolute_error.mean())}; baseline MAE {md_money(latest.baseline_error.mean())}. '+('The model improves on this baseline.' if wins else 'The model does not beat this baseline. Treat its valuations cautiously.'))
-            st.caption('Error bands use the 90th percentile of absolute prediction errors from strictly earlier validation seasons in the same cohort (minimum 20). Coverage is measured, not guaranteed. Early seasons have no band.')
+            st.caption('Error bands use the 90th percentile of absolute prediction errors from strictly earlier validation seasons in the same cohort (minimum 20). With cap normalization, past errors are measured as cap shares before conversion to test-season dollars. Coverage is measured, not guaranteed. Early seasons have no band.')
             st.download_button('Download test predictions and error bands',predictions.to_csv(index=False).encode(),'historical-validation.csv','text/csv')
 with sources:
     st.subheader('Data coverage and provenance')
@@ -211,6 +229,11 @@ with sources:
         st.download_button('Download excluded players',(ROOT/'data/exclusions.csv').read_bytes(),'excluded-players.csv','text/csv')
     else:
         st.write('CSV metadata is supplied by the uploader. Older CSVs may lack contract types, advanced metrics, cap hits, or cash paid. Missing optional fields remain unavailable.')
+    st.subheader('Workload adjustment and salary caps')
+    st.write('When enabled, each efficiency component percentile uses 50 + n/(n+k) × (raw percentile − 50). The midpoint 50 represents the position average percentile. QB k=100, rushing k=75, receiving k=50; n is the relevant attempts, plays, carries, or targets. Totals and target share stay unchanged. These are fixed starter strengths, not calibrated uncertainty or proven improvements. Raw statistics are preserved; zero-opportunity scores remain unavailable. Box-score scoring is unchanged.')
+    st.write('Cap-normalized historical fits use cost / league cap; test predictions and prior error bands are translated into that test season’s dollars. Unsupported years are omitted from normalized tests without estimating a cap.')
+    st.dataframe(pd.DataFrame({'Season':list(SALARY_CAPS),'League base cap (USD)':list(SALARY_CAPS.values())}),hide_index=True)
+    st.markdown('[NFL 2022–2024 caps](https://www.nfl.com/news/nfl-salary-cap-set-at-255-4m-per-team-for-2024-regular-season) · [NFL 2025 cap](https://www.nfl.com/news/nfl-sets-salary-cap-at-279-2-million-per-team-for-2025-season)')
     st.subheader('Cost definitions')
     st.markdown('**APY:** average annual contract value. **Cap hit:** that season’s reported cap charge. **Cash paid:** that season’s reported cash. Bonus timing and restructures make these different. Missing/nonpositive cost rows are excluded from that measure’s model; they are not replaced with APY.')
     st.subheader('Position-specific scoring')
