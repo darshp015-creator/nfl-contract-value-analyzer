@@ -5,6 +5,7 @@ from sklearn.linear_model import Ridge
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from src.metrics import add_production
+from src.context import SALARY_CAPS, RATE_WORKLOAD
 
 COSTS = {'Contract APY':'salary','Season cap hit':'cap_hit','Season cash paid':'cash_paid'}
 COMPONENTS = {
@@ -30,7 +31,7 @@ def deal_group(value):
         return 'Veteran deal'
     return 'Unknown'
 
-def score_players(frame, scoring='Position metrics'):
+def score_players(frame, scoring='Position metrics', adjust_samples=True):
     df = add_production(frame).reset_index(drop=True)
     df['contract_group'] = df.get('contract_type',pd.Series('',index=df.index)).map(deal_group)
     for col in set(ADVANCED_REQUIRED + ['cap_hit','cash_paid']):
@@ -42,6 +43,7 @@ def score_players(frame, scoring='Position metrics'):
     df['dropbacks'] = df.attempts + df.sacks_suffered
     df['passing_epa_rate'] = rate(df.passing_epa,df.dropbacks)
     df['turnover_rate'] = rate(df.interceptions+df.rushing_fumbles_lost+df.sack_fumbles_lost,df.dropbacks+df.carries)
+    df['qb_plays'] = df.dropbacks + df.carries
     df['total_epa'] = df.passing_epa+df.rushing_epa
     df['rushing_epa_rate'] = rate(df.rushing_epa,df.carries)
     df['scrimmage_yards'] = df.rushing_yards+df.receiving_yards
@@ -52,23 +54,39 @@ def score_players(frame, scoring='Position metrics'):
     df['catch_rate'] = rate(df.receptions,df.targets)
     df['opportunities'] = np.select([df.position.eq('QB'),df.position.eq('RB')],[df.dropbacks,df.carries+df.targets],default=df.targets)
     df['small_sample'] = df.opportunities < df.position.map({'QB':100,'RB':75,'WR':50,'TE':50})
+    df['sample_adjusted'] = bool(adjust_samples and scoring=='Position metrics')
+    df['raw_production_score'] = np.nan
     df['components_used'] = 0
     df['production_score'] = np.nan
     if scoring == 'Box-score proxy':
         df['production_score'] = df.production_percentile
+        df['raw_production_score'] = df.production_score
         df['components_used'] = 1
     else:
         for (_,pos),group in df.groupby(['season','position']):
             numerator = pd.Series(0.,index=group.index)
             denominator = numerator.copy()
+            raw_numerator = numerator.copy()
             eligible = group.opportunities.gt(0)
             for col,weight,higher in COMPONENTS[pos]:
                 values = group[col].where(eligible)
                 count = values.notna().sum()
                 pct = 100 * (values.rank(ascending=higher,method='average')-.5)/max(count,1)
+                raw_numerator += pct.fillna(0)*weight
+                df.loc[group.index,col+'_raw_score'] = pct
+                reliability = pd.Series(1.,index=group.index)
+                if adjust_samples and col in RATE_WORKLOAD:
+                    exposure,strength = RATE_WORKLOAD[col]
+                    n = group[exposure].clip(lower=0)
+                    reliability = n/(n+strength)
+                    # Missing exposure cannot support an efficiency estimate.
+                    pct = 50 + reliability*(pct-50)
+                df.loc[group.index,col+'_reliability'] = reliability
+                df.loc[group.index,col+'_score'] = pct
                 numerator += pct.fillna(0)*weight
-                denominator += values.notna()*weight
+                denominator += pct.notna()*weight
                 df.loc[group.index,'components_used'] += values.notna().astype(int)
+            df.loc[group.index,'raw_production_score'] = raw_numerator / sum(weight*group[col].where(eligible).notna() for col,weight,_ in COMPONENTS[pos]).replace(0,np.nan)
             df.loc[group.index,'production_score'] = numerator / denominator.where(denominator>0)
     return df
 
@@ -81,9 +99,11 @@ def _fit_predict(train, test):
     estimates = np.exp(model.predict(test[features]))
     return np.clip(estimates,train.cost.min(),train.cost.max()), 'Ridge: production + games'
 
-def evaluate(frame,cost_label='Contract APY',scoring='Position metrics',same_deal=True):
-    df = score_players(frame,scoring)
+def evaluate(frame,cost_label='Contract APY',scoring='Position metrics',same_deal=True,adjust_samples=True):
+    df = score_players(frame,scoring,adjust_samples)
     df['cost'] = df[COSTS[cost_label]]
+    df['league_cap'] = df.season.map(SALARY_CAPS)
+    df['cost_cap_pct'] = 100*df.cost/df.league_cap
     # Keep missing/nonpositive costs visible in coverage, but never divide by them.
     df['eligible'] = df.cost.gt(0)&df.production_score.notna()
     df['benchmark_salary'] = np.nan
@@ -102,6 +122,7 @@ def evaluate(frame,cost_label='Contract APY',scoring='Position metrics',same_dea
             df.loc[idx,'benchmark_salary']=prediction[0]
             df.loc[idx,'model_method']=method
             df.loc[idx,['peer_low','peer_high']]=peers.cost.quantile([.1,.9]).to_numpy()
+    df['benchmark_cap_pct']=100*df.benchmark_salary/df.league_cap
     df['surplus']=df.benchmark_salary-df.cost
     df['value_ratio']=df.benchmark_salary/df.cost.where(df.cost>0)
     df['value_label']=np.select([df.value_ratio.isna(),df.value_ratio.ge(1.2),df.value_ratio.le(.8)],
@@ -109,9 +130,11 @@ def evaluate(frame,cost_label='Contract APY',scoring='Position metrics',same_dea
     df['position_value_rank']=df.groupby(keys).value_ratio.rank(ascending=False,method='min').astype('Int64')
     return df
 
-def chronological_validation(df,same_deal=True):
+def chronological_validation(df,same_deal=True,normalize_cap=False):
     """Test complete later seasons; no test salary enters training or error bands."""
     available=df[df.eligible].copy()
+    available['cost_scale'] = available.season.map(SALARY_CAPS)/100 if normalize_cap else 1.
+    available = available[available.cost_scale.notna()]
     years=sorted(available.season.unique())
     if len(years)<2:
         return pd.DataFrame(),pd.DataFrame()
@@ -125,10 +148,15 @@ def chronological_validation(df,same_deal=True):
                 train=train[train[key].eq(value)]
             if len(train)<8:
                 continue
-            pred,method=_fit_predict(train,test)
+            fitting=train.copy()
+            fitting['cost']=fitting.cost/fitting.cost_scale
+            pred,method=_fit_predict(fitting,test)
+            pred=pred*test.cost_scale.to_numpy()
             out=test[['player_id','player_name','season','position','contract_group','cost']].copy()
             out['prediction']=pred
-            out['baseline']=train.cost.median()
+            out['baseline']=fitting.cost.median()*test.cost_scale.to_numpy()
+            out['cost_scale']=test.cost_scale.to_numpy()
+            out['cap_normalized']=normalize_cap
             out['method']=method
             out['training_rows']=len(train)
             out['training_through']=max(train.season)
@@ -145,7 +173,7 @@ def chronological_validation(df,same_deal=True):
         if same_deal:
             calibration=calibration[calibration.contract_group.eq(row.contract_group)]
         if len(calibration)>=20:
-            radius=calibration.absolute_error.quantile(.9)
+            radius=(calibration.absolute_error/calibration.cost_scale).quantile(.9)*row.cost_scale
             result.loc[idx,'lower']=max(0,row.prediction-radius)
             result.loc[idx,'upper']=row.prediction+radius
     summaries=[]
